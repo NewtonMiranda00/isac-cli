@@ -36,6 +36,13 @@ ${plan}
    - The storage key MUST remain "ds-theme" — do NOT change it
 9. **Validate** with \`npm run build\`
 
+## Project structure
+
+- This is a freshly scaffolded Next.js App Router project
+- Start from \`app/\`, \`public/\`, \`app/design-system/\`, and \`.claude/\`
+- Do NOT assume \`src/\` or a root-level \`components/\` directory exists
+- If you inspect files from the shell, prefer commands that work when only \`app/\` exists
+
 ## Code patterns
 
 ### Fonts

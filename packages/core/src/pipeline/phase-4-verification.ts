@@ -1,5 +1,6 @@
 import { join } from "node:path";
-import { runClaudePhase } from "./claude-runner.js";
+import { getAgentBackendLabel } from "../backends.js";
+import { getDefaultModelForBackend, runAgentPhase } from "./agent-runner.js";
 import { PHASE_4_TOOLS } from "./tools.js";
 import { log } from "../ui/logger.js";
 import { runPixelDiff } from "./pixel-diff.js";
@@ -36,7 +37,7 @@ export async function runPhase4(
       };
     }
 
-    // If pixel-diff failed due to missing chrome/reference, fall through to Claude
+    // If pixel-diff failed due to missing chrome/reference, fall through to the agent backend
     const isInfraFailure = pixelResult.issues.some(i =>
       i.includes("No reference screenshot") ||
       i.includes("Chrome not found") ||
@@ -58,20 +59,21 @@ export async function runPhase4(
       };
     }
 
-    log.info("Pixel-diff unavailable — falling back to Claude verification");
+    log.info(`Pixel-diff unavailable — falling back to ${getAgentBackendLabel(ctx.backend)} verification`);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    log.warn(`Pixel-diff failed: ${msg} — falling back to Claude verification`);
+    log.warn(`Pixel-diff failed: ${msg} — falling back to ${getAgentBackendLabel(ctx.backend)} verification`);
   }
 
-  // ── Fallback: Claude-based visual verification ──
+  // ── Fallback: agent-based visual verification ──
   try {
-    const result = await runClaudePhase(
+    const result = await runAgentPhase(
+      ctx.backend,
       {
         name: "phase-4-verification",
         prompt: ctx.adapter.getVisualVerifierPrompt(ctx.screenshotDir),
         allowedTools: [...PHASE_4_TOOLS],
-        model: "claude-sonnet-4-6",
+        model: getDefaultModelForBackend(ctx.backend),
         timeout: 120_000,
         maxTurns: 20,
       },

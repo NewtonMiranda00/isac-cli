@@ -1,4 +1,4 @@
-import { runClaudePhase } from "./claude-runner.js";
+import { getDefaultModelForBackend, runAgentPhase } from "./agent-runner.js";
 import { PHASE_2_TOOLS } from "./tools.js";
 import { log } from "../ui/logger.js";
 import { PagePlanSchema, SECTION_TYPES } from "../catalog/index.js";
@@ -103,6 +103,8 @@ export async function runPhase2(
   onEvent?: (event: Record<string, unknown>) => void,
 ): Promise<Phase2Result> {
   const start = Date.now();
+  const phaseTimeout = ctx.backend === "codex" ? 300_000 : 180_000;
+  const activityTimeout = ctx.backend === "codex" ? 240_000 : 180_000;
 
   try {
     // Select prompt based on engine
@@ -116,15 +118,16 @@ export async function runPhase2(
       prompt = ctx.adapter.getPagePlannerPrompt(ctx.screenshotDir);
     }
 
-    const result = await runClaudePhase(
+    const result = await runAgentPhase(
+      ctx.backend,
       {
         name: "phase-2-planning",
         prompt,
         allowedTools: [...PHASE_2_TOOLS],
-        model: "claude-sonnet-4-6",
-        timeout: 180_000,
+        model: getDefaultModelForBackend(ctx.backend),
+        timeout: phaseTimeout,
         maxTurns: 15,
-        activityTimeout: 180_000,
+        activityTimeout,
       },
       ctx.cwd,
       ctx.sessionId,

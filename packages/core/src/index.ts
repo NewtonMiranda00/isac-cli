@@ -41,6 +41,7 @@ export {
 
 // ── Utils ───────────────────────────────────────────────────
 export { ensureClaude, getClaudeVersion } from "./utils/claude.js";
+export { ensureCodex, getCodexVersion } from "./utils/codex.js";
 export {
   ensureBackendAvailable,
   getBackendVersion,
@@ -56,6 +57,7 @@ export {
   isAgentBackend,
   type AgentBackend,
 } from "./backends.js";
+export { getDefaultModelForBackend, runAgentPhase } from "./pipeline/agent-runner.js";
 
 // ── Catalog ────────────────────────────────────────────────
 export {

@@ -1,8 +1,9 @@
 import type { AgentBackend } from "../backends.js";
 import { ensureClaude, getClaudeVersion } from "./claude.js";
+import { ensureCodex, getCodexVersion } from "./codex.js";
 
 export function isBackendImplemented(backend: AgentBackend): boolean {
-  return backend === "claude";
+  return backend === "claude" || backend === "codex";
 }
 
 export function ensureBackendAvailable(backend: AgentBackend): boolean {
@@ -10,7 +11,7 @@ export function ensureBackendAvailable(backend: AgentBackend): boolean {
     case "claude":
       return ensureClaude();
     case "codex":
-      return false;
+      return ensureCodex();
   }
 }
 
@@ -19,7 +20,7 @@ export function getBackendVersion(backend: AgentBackend): string {
     case "claude":
       return getClaudeVersion();
     case "codex":
-      return "unimplemented";
+      return getCodexVersion();
   }
 }
 
@@ -28,6 +29,6 @@ export function getBackendUnavailableReason(backend: AgentBackend): string {
     case "claude":
       return "Claude CLI not found. Install it from https://claude.ai/download";
     case "codex":
-      return "Backend 'codex' is not implemented yet in this branch. This PR only adds backend plumbing ahead of the runner abstraction.";
+      return "Codex CLI not found. Install it from https://developers.openai.com/codex/cli/";
   }
 }

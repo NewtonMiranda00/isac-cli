@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { runClaudePhase } from "./claude-runner.js";
+import { getDefaultModelForBackend, runAgentPhase } from "./agent-runner.js";
 import { PHASE_0_TOOLS } from "./tools.js";
 import { log } from "../ui/logger.js";
 import type { PipelineContext, PhaseResult } from "./types.js";
@@ -55,12 +55,13 @@ export async function runPhase0Animation(
   const start = Date.now();
 
   try {
-    const result = await runClaudePhase(
+    const result = await runAgentPhase(
+      ctx.backend,
       {
         name: "phase-0-animation",
         prompt: getAnimationDetectionPrompt(ctx.url),
         allowedTools: [...PHASE_0_TOOLS],
-        model: "claude-sonnet-4-6",
+        model: getDefaultModelForBackend(ctx.backend),
         timeout: 180_000, // 3 min — animation detection is lighter than full screenshot capture
         maxTurns: 20,
         activityTimeout: 120_000,

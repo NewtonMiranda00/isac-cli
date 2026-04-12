@@ -1,7 +1,7 @@
-import { execSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { log } from "../ui/logger.js";
+import { runAgentBrowser } from "../utils/agent-browser.js";
 import type { VerificationResult } from "./types.js";
 
 /**
@@ -49,23 +49,23 @@ export async function runPixelDiff(options: PixelDiffOptions): Promise<Verificat
     log.info("Capturing implementation screenshot for pixel-diff...");
     mkdirSync(outputDir, { recursive: true });
 
-    execSync(`agent-browser open "${implementationUrl}"`, { stdio: "pipe", timeout: 30_000 });
-    execSync("agent-browser wait --load networkidle", { stdio: "pipe", timeout: 30_000 });
-    execSync("agent-browser set viewport 1280 800", { stdio: "pipe" });
-    execSync("agent-browser wait 1000", { stdio: "pipe" });
+    runAgentBrowser(["open", implementationUrl], { stdio: "pipe", timeout: 30_000 });
+    runAgentBrowser(["wait", "--load", "networkidle"], { stdio: "pipe", timeout: 30_000 });
+    runAgentBrowser(["set", "viewport", "1280", "800"], { stdio: "pipe" });
+    runAgentBrowser(["wait", "1000"], { stdio: "pipe" });
 
     const implPath = join(outputDir, "implementation-full-page.png");
-    execSync(`agent-browser screenshot --full "${implPath}"`, { stdio: "pipe", timeout: 15_000 });
+    runAgentBrowser(["screenshot", "--full", implPath], { stdio: "pipe", timeout: 15_000 });
 
     // Dark mode screenshot
     const implDarkPath = join(outputDir, "implementation-full-page-dark.png");
-    execSync("agent-browser set media dark", { stdio: "pipe" });
-    execSync("agent-browser wait 500", { stdio: "pipe" });
-    execSync(`agent-browser screenshot --full "${implDarkPath}"`, { stdio: "pipe", timeout: 15_000 });
+    runAgentBrowser(["set", "media", "dark"], { stdio: "pipe" });
+    runAgentBrowser(["wait", "500"], { stdio: "pipe" });
+    runAgentBrowser(["screenshot", "--full", implDarkPath], { stdio: "pipe", timeout: 15_000 });
 
     // Reset to light mode
-    execSync("agent-browser set media light", { stdio: "pipe" });
-    execSync("agent-browser close", { stdio: "pipe" });
+    runAgentBrowser(["set", "media", "light"], { stdio: "pipe" });
+    runAgentBrowser(["close"], { stdio: "pipe" });
 
     // Compare light mode
     const refImg = PNG.sync.read(readFileSync(refPath));

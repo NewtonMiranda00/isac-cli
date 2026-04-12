@@ -26,11 +26,11 @@ describe("backend support", () => {
   });
 
   it("marks codex as not implemented yet", () => {
-    expect(isBackendImplemented("codex")).toBe(false);
-    expect(getBackendUnavailableReason("codex")).toContain("not implemented yet");
+    expect(isBackendImplemented("codex")).toBe(true);
+    expect(getBackendUnavailableReason("codex")).toContain("Codex CLI not found");
   });
 
-  it("keeps claude marked as the only implemented backend for now", () => {
+  it("keeps claude implemented as well", () => {
     expect(isBackendImplemented("claude")).toBe(true);
     expect(getBackendUnavailableReason("claude")).toContain("Claude CLI not found");
   });

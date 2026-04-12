@@ -1,7 +1,8 @@
 import { execSync } from "node:child_process";
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { runClaudePhase } from "./claude-runner.js";
+import { getAgentBackendLabel } from "../backends.js";
+import { getDefaultModelForBackend, runAgentPhase } from "./agent-runner.js";
 import { PHASE_3_TOOLS } from "./tools.js";
 import { log } from "../ui/logger.js";
 import type { PagePlan } from "../catalog/index.js";
@@ -31,7 +32,7 @@ export async function runPhase3(
 
       const validation = ctx.adapter.validateImplementation(ctx.cwd);
       if (!validation.valid) {
-        log.warn("json-render render failed validation — falling back to legacy");
+        log.warn(`json-render render failed validation — falling back to ${getAgentBackendLabel(ctx.backend)}`);
       } else {
         let buildPasses = false;
         try {
@@ -40,7 +41,7 @@ export async function runPhase3(
           buildPasses = true;
           log.success(`${ctx.adapter.getMainPagePath()} + type check passes`);
         } catch {
-          log.warn("json-render render failed type check — falling back to legacy");
+          log.warn(`json-render render failed type check — falling back to ${getAgentBackendLabel(ctx.backend)}`);
         }
 
         if (buildPasses) {
@@ -66,7 +67,7 @@ export async function runPhase3(
 
       const validation = ctx.adapter.validateImplementation(ctx.cwd);
       if (!validation.valid) {
-        log.warn("Deterministic render failed validation — falling back to Claude");
+        log.warn(`Deterministic render failed validation — falling back to ${getAgentBackendLabel(ctx.backend)}`);
       } else {
         let buildPasses = false;
         try {
@@ -75,7 +76,7 @@ export async function runPhase3(
           buildPasses = true;
           log.success(`${ctx.adapter.getMainPagePath()} + type check passes`);
         } catch {
-          log.warn("Deterministic render failed type check — falling back to Claude");
+          log.warn(`Deterministic render failed type check — falling back to ${getAgentBackendLabel(ctx.backend)}`);
         }
 
         if (buildPasses) {
@@ -89,13 +90,14 @@ export async function runPhase3(
       }
     }
 
-    // ── Claude path: AI-based implementation ──
-    const result = await runClaudePhase(
+    // ── AI path: backend-based implementation ──
+    const result = await runAgentPhase(
+      ctx.backend,
       {
         name: "phase-3-implementation",
         prompt: ctx.adapter.getPageBuilderPrompt(plan, ctx.screenshotDir, corrections),
         allowedTools: [...PHASE_3_TOOLS],
-        model: "claude-sonnet-4-6",
+        model: getDefaultModelForBackend(ctx.backend),
         timeout: 600_000,
         maxTurns: 50,
       },

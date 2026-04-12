@@ -25,6 +25,73 @@ import { THEME_TOGGLE_TEMPLATE } from "./templates/theme-toggle.tsx.js";
 
 // ── Font normalization ──────────────────────────────────────────────
 
+function getNpmCommand(): string {
+  return process.platform === "win32" ? "npm.cmd" : "npm";
+}
+
+function sleepOneSecond(): void {
+  try {
+    if (process.platform === "win32") {
+      execSync('powershell -NoProfile -Command "Start-Sleep -Seconds 1"', { stdio: "pipe", timeout: 3_000 });
+      return;
+    }
+
+    execSync("sleep 1", { stdio: "pipe", timeout: 3_000 });
+  } catch {
+    // non-fatal
+  }
+}
+
+function killDevServerOnPort3000(): void {
+  try {
+    if (process.platform === "win32") {
+      const output = execSync('netstat -ano | findstr ":3000"', {
+        stdio: "pipe",
+        encoding: "utf-8",
+        timeout: 3_000,
+      }).trim();
+
+      const pids = new Set<string>();
+      for (const line of output.split(/\r?\n/)) {
+        const parts = line.trim().split(/\s+/);
+        const pid = parts.at(-1);
+        if (pid && /^\d+$/.test(pid)) {
+          pids.add(pid);
+        }
+      }
+
+      for (const pid of pids) {
+        try {
+          execSync(`taskkill /PID ${pid} /F`, { stdio: "pipe", timeout: 3_000 });
+        } catch {
+          // already dead or inaccessible
+        }
+      }
+
+      if (pids.size > 0) sleepOneSecond();
+      return;
+    }
+
+    const pid = execSync("lsof -ti :3000", { stdio: "pipe", timeout: 3_000 })
+      .toString()
+      .trim();
+
+    if (!pid) return;
+
+    for (const p of pid.split("\n")) {
+      try {
+        execSync(`kill ${p.trim()}`, { stdio: "pipe", timeout: 2_000 });
+      } catch {
+        // already dead
+      }
+    }
+
+    sleepOneSecond();
+  } catch {
+    // no process on port 3000 or tool unavailable
+  }
+}
+
 function normalizeFontVars(css: string): string {
   let result = css;
 
@@ -537,18 +604,7 @@ export const nextjsAdapter: FrameworkAdapter = {
     // full restart with a clean cache.
     const nextDir = join(cwd, ".next");
 
-    // Find and kill Next.js dev server process on port 3000
-    try {
-      const pid = execSync("lsof -ti :3000", { stdio: "pipe", timeout: 3_000 })
-        .toString().trim();
-      if (pid) {
-        for (const p of pid.split("\n")) {
-          try { execSync(`kill ${p.trim()}`, { stdio: "pipe", timeout: 2_000 }); } catch { /* already dead */ }
-        }
-        // Give it a moment to release the port
-        execSync("sleep 1", { stdio: "pipe" });
-      }
-    } catch { /* no process on port 3000 */ }
+    killDevServerOnPort3000();
 
     // Remove stale Turbopack cache
     if (existsSync(nextDir)) {
@@ -557,10 +613,13 @@ export const nextjsAdapter: FrameworkAdapter = {
 
     // Restart dev server in background (detached, won't block the pipeline)
     try {
-      const child = spawn("npm", ["run", "dev"], {
+      const child = spawn(getNpmCommand(), ["run", "dev"], {
         cwd,
         stdio: "ignore",
         detached: true,
+      });
+      child.on("error", () => {
+        // Non-fatal — user can start the dev server manually.
       });
       child.unref();
     } catch { /* non-fatal — user can start manually */ }

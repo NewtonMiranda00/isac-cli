@@ -30,6 +30,13 @@ Before generating the spec, you MUST:
 2. **Read the design system** in \`app/globals.css\` to learn available CSS tokens
 3. **Read the animation catalog** at \`.claude/animations/catalog.json\` (if it exists)
 
+## Project structure
+
+- This is a freshly scaffolded Next.js App Router project
+- Start from \`app/\`, \`public/\`, \`app/design-system/\`, and \`.claude/\`
+- Do NOT assume \`src/\` or a root-level \`components/\` directory exists
+- If you inspect files from the shell, prefer commands that work when only \`app/\` exists
+
 ## Output format
 
 Output ONLY the JSON spec — no markdown fences, no explanation before or after.

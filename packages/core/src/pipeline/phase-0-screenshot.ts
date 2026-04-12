@@ -1,4 +1,3 @@
-import { execSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -10,6 +9,7 @@ import {
   extractImages,
   captureScreenshots,
 } from "./color-extractor.js";
+import { runAgentBrowser } from "../utils/agent-browser.js";
 import { log } from "../ui/logger.js";
 import { updateStatus } from "../ui/tui.js";
 import type { PipelineContext, PhaseResult } from "./types.js";
@@ -97,7 +97,7 @@ export async function runPhase0(
 
     // Close browser — all extraction is done
     try {
-      execSync("agent-browser close", { stdio: "pipe", timeout: 5_000 });
+      runAgentBrowser(["close"], { stdio: "pipe", timeout: 5_000 });
     } catch { /* browser may already be closed */ }
 
     // ── Safety nets: write defaults for any missing files ──

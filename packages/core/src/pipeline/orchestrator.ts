@@ -8,6 +8,7 @@ import { runPhase2 } from "./phase-2-planning.js";
 import { runPhase3 } from "./phase-3-implementation.js";
 import { runPhase4 } from "./phase-4-verification.js";
 import { findChromePath } from "./color-extractor.js";
+import { ensureAgentBrowser, prependAgentBrowserToPath } from "../utils/agent-browser.js";
 import { log } from "../ui/logger.js";
 import { setPhase, succeedPhase, failPhase, renderEvent, stopSpinner, getTotalCost } from "../ui/tui.js";
 import type { PipelineContext, PipelineOptions, PipelineResult, PhaseResult } from "./types.js";
@@ -154,20 +155,16 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     process.env.AGENT_BROWSER_EXECUTABLE_PATH = chromePath;
   }
 
-  // Add agent-browser binary to PATH so Claude subprocess can find it.
-  // tsup bundles core into CLI, so import.meta.url → packages/cli/dist/*.js
-  // pnpm creates the symlink at packages/cli/node_modules/.bin/agent-browser
-  {
-    const distDir = dirname(new URL(import.meta.url).pathname);
-    const pkgRoot = dirname(distDir); // dist/ → package root
-    const localBin = join(pkgRoot, "node_modules", ".bin");
-
-    if (existsSync(join(localBin, "agent-browser"))) {
-      process.env.PATH = `${localBin}:${process.env.PATH}`;
-      log.info(`agent-browser: ${localBin}`);
+  // Add agent-browser to PATH for any subprocess that still shells out to it directly.
+  if (ensureAgentBrowser()) {
+    const agentBrowserBin = prependAgentBrowserToPath();
+    if (agentBrowserBin) {
+      log.info(`agent-browser: ${agentBrowserBin}`);
     } else {
-      log.warn("agent-browser not found in node_modules — install with: npm i -g agent-browser");
+      log.info("agent-browser: resolved via PATH");
     }
+  } else {
+    log.warn("agent-browser not found — install it locally or add it to PATH");
   }
 
   // ═══════════════════════════════════════════════

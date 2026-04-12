@@ -2,6 +2,7 @@ import { execSync } from "node:child_process";
 import { existsSync, writeFileSync, unlinkSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { log } from "../ui/logger.js";
+import { runAgentBrowser } from "../utils/agent-browser.js";
 
 // ── Chrome executable detection ─────────────────────────────────────
 
@@ -556,15 +557,15 @@ export async function extractColors(url: string, cwd: string): Promise<void> {
 
   try {
     // Navigate and wait for load
-    execSync(`agent-browser open "${url}"`, { stdio: "pipe", timeout: 30_000 });
-    execSync("agent-browser wait --load networkidle", { stdio: "pipe", timeout: 30_000 });
-    execSync("agent-browser set viewport 1440 900", { stdio: "pipe" });
+    runAgentBrowser(["open", url], { stdio: "pipe", timeout: 90_000 });
+    runAgentBrowser(["wait", "--load", "networkidle"], { stdio: "pipe", timeout: 90_000 });
+    runAgentBrowser(["set", "viewport", "1440", "900"], { stdio: "pipe" });
 
     // Light mode extraction
-    const lightRaw = execSync("agent-browser eval --stdin", {
+    const lightRaw = runAgentBrowser(["eval", "--stdin"], {
       input: scriptExpr,
       encoding: "utf-8",
-      timeout: 15_000,
+      timeout: 30_000,
     }).trim();
 
     // agent-browser serializes return values as JSON — re-format with indentation
@@ -573,20 +574,20 @@ export async function extractColors(url: string, cwd: string): Promise<void> {
     log.success("color-data.json (light mode — agent-browser)");
 
     // Dark mode extraction
-    execSync("agent-browser set media dark", { stdio: "pipe" });
-    execSync("agent-browser wait 500", { stdio: "pipe" });
+    runAgentBrowser(["set", "media", "dark"], { stdio: "pipe" });
+    runAgentBrowser(["wait", "500"], { stdio: "pipe" });
 
-    const darkRaw = execSync("agent-browser eval --stdin", {
+    const darkRaw = runAgentBrowser(["eval", "--stdin"], {
       input: scriptExpr,
       encoding: "utf-8",
-      timeout: 15_000,
+      timeout: 30_000,
     }).trim();
 
     writeFileSync(join(colorsDir, "color-data-dark.json"), formatJson(darkRaw), "utf-8");
     log.success("color-data-dark.json (dark mode — agent-browser)");
 
     // Reset to light mode — Claude agent will reuse this browser session
-    execSync("agent-browser set media light", { stdio: "pipe" });
+    runAgentBrowser(["set", "media", "light"], { stdio: "pipe" });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     log.warn(`agent-browser color extraction failed: ${msg}`);
@@ -600,7 +601,7 @@ export async function extractBrand(url: string, cwd: string): Promise<void> {
   const scriptExpr = `(${BRAND_EXTRACTION_SCRIPT.toString()})()`;
 
   try {
-    const rawOutput = execSync("agent-browser eval --stdin", {
+    const rawOutput = runAgentBrowser(["eval", "--stdin"], {
       input: scriptExpr,
       encoding: "utf-8",
       timeout: 15_000,
@@ -790,7 +791,7 @@ export async function extractFonts(url: string, cwd: string): Promise<void> {
   const scriptExpr = `(${FONT_EXTRACTION_SCRIPT.toString()})()`;
 
   try {
-    const rawOutput = execSync("agent-browser eval --stdin", {
+    const rawOutput = runAgentBrowser(["eval", "--stdin"], {
       input: scriptExpr,
       encoding: "utf-8",
       timeout: 15_000,
@@ -855,7 +856,7 @@ export async function extractIcons(cwd: string): Promise<void> {
   const scriptExpr = `(${ICON_EXTRACTION_SCRIPT.toString()})()`;
 
   try {
-    const rawOutput = execSync("agent-browser eval --stdin", {
+    const rawOutput = runAgentBrowser(["eval", "--stdin"], {
       input: scriptExpr,
       encoding: "utf-8",
       timeout: 15_000,
@@ -1027,7 +1028,7 @@ export async function extractBackgrounds(cwd: string): Promise<void> {
   const scriptExpr = `(${BACKGROUND_EXTRACTION_SCRIPT.toString()})()`;
 
   try {
-    const rawOutput = execSync("agent-browser eval --stdin", {
+    const rawOutput = runAgentBrowser(["eval", "--stdin"], {
       input: scriptExpr,
       encoding: "utf-8",
       timeout: 15_000,
@@ -1212,7 +1213,7 @@ export async function extractImages(cwd: string): Promise<void> {
   const scriptExpr = `(${IMAGE_EXTRACTION_SCRIPT.toString()})()`;
 
   try {
-    const rawOutput = execSync("agent-browser eval --stdin", {
+    const rawOutput = runAgentBrowser(["eval", "--stdin"], {
       input: scriptExpr,
       encoding: "utf-8",
       timeout: 15_000,
@@ -1245,23 +1246,23 @@ export async function captureScreenshots(cwd: string): Promise<void> {
 
   try {
     // Light mode full-page
-    execSync(`agent-browser screenshot --full "${join(screenshotDir, "full-page.png")}"`, {
+    runAgentBrowser(["screenshot", "--full", join(screenshotDir, "full-page.png")], {
       stdio: "pipe",
       timeout: 30_000,
     });
     log.success("full-page.png (light)");
 
     // Dark mode
-    execSync("agent-browser set media dark", { stdio: "pipe" });
-    execSync("agent-browser wait 500", { stdio: "pipe" });
-    execSync(`agent-browser screenshot --full "${join(screenshotDir, "full-page-dark.png")}"`, {
+    runAgentBrowser(["set", "media", "dark"], { stdio: "pipe" });
+    runAgentBrowser(["wait", "500"], { stdio: "pipe" });
+    runAgentBrowser(["screenshot", "--full", join(screenshotDir, "full-page-dark.png")], {
       stdio: "pipe",
       timeout: 30_000,
     });
     log.success("full-page-dark.png (dark)");
 
     // Reset to light mode
-    execSync("agent-browser set media light", { stdio: "pipe" });
+    runAgentBrowser(["set", "media", "light"], { stdio: "pipe" });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     log.warn(`screenshot capture failed: ${msg}`);

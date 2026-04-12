@@ -18,6 +18,13 @@ Analyze reference screenshots along with the already-extracted design system, an
 6. **Map tokens** — for each visual element, identify which CSS token to use
 7. **Map animations** — for each section, include any animations from the catalog
 
+## Project structure
+
+- This is a freshly scaffolded Next.js App Router project
+- Start from \`app/\`, \`public/\`, \`app/design-system/\`, and \`.claude/\`
+- Do NOT assume \`src/\` or a root-level \`components/\` directory exists
+- If you inspect files from the shell, prefer commands that work when only \`app/\` exists
+
 ## Plan format
 
 Return the plan in this format:
@@ -111,6 +118,13 @@ Analyze reference screenshots and the design system, then output a **single JSON
 4. **Identify each section** of the page, from top to bottom
 5. **Extract real data** visible in the screenshots (text, numbers, names, URLs)
 6. **Map tokens** — for each visual element, identify which CSS token to use
+
+## Project structure
+
+- This is a freshly scaffolded Next.js App Router project
+- Start from \`app/\`, \`public/\`, \`app/design-system/\`, and \`.claude/\`
+- Do NOT assume \`src/\` or a root-level \`components/\` directory exists
+- If you inspect files from the shell, prefer commands that work when only \`app/\` exists
 
 ## Available section types
 
