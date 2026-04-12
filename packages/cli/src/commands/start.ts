@@ -1,5 +1,5 @@
 import { resolve, basename } from "node:path";
-import { readdirSync, existsSync, mkdirSync } from "node:fs";
+import { readdirSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { execSync } from "node:child_process";
 import * as clack from "@clack/prompts";
 import chalk from "chalk";
@@ -16,6 +16,35 @@ function isEmptyDir(dir: string): boolean {
   return entries.length === 0 || (entries.length === 1 && entries[0] === ".git");
 }
 
+function isRunnableNextApp(dir: string): boolean {
+  const packageJsonPath = resolve(dir, "package.json");
+  if (!existsSync(packageJsonPath)) return false;
+
+  try {
+    const pkg = JSON.parse(readFileSync(packageJsonPath, "utf-8")) as {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+      scripts?: Record<string, string>;
+    };
+    const deps = {
+      ...(pkg.dependencies ?? {}),
+      ...(pkg.devDependencies ?? {}),
+    };
+    const hasNextDeps = Boolean(deps.next && deps.react && deps["react-dom"]);
+    const hasAppLayout = [
+      "app/layout.tsx",
+      "app/layout.ts",
+      "app/layout.jsx",
+      "app/layout.js",
+    ].some((file) => existsSync(resolve(dir, file)));
+    const devScript = pkg.scripts?.dev ?? "";
+
+    return hasNextDeps && hasAppLayout && devScript.includes("next dev");
+  } catch {
+    return false;
+  }
+}
+
 function cancel(): never {
   clack.cancel("Setup cancelled.");
   process.exit(0);
@@ -26,15 +55,18 @@ export async function startCommand(options: StartOptions): Promise<void> {
 
   const dir = resolve(options.dir ?? process.cwd());
   const isNew = isEmptyDir(dir);
+  const isExistingRunnableNextApp = isRunnableNextApp(dir);
 
   clack.intro(chalk.cyan("Let's set up your ISAC project"));
 
   if (isNew) {
-    clack.log.info("Empty directory detected — we'll scaffold a new project.");
-  } else if (existsSync(resolve(dir, "isac.config.json"))) {
+    clack.log.info("Empty directory detected — we'll scaffold a new project here.");
+  } else if (isExistingRunnableNextApp && existsSync(resolve(dir, "isac.config.json"))) {
     clack.log.info("Existing ISAC config found — we'll update your preferences.");
-  } else {
+  } else if (isExistingRunnableNextApp) {
     clack.log.info("Existing project detected — we'll add ISAC configuration.");
+  } else {
+    clack.log.info("Current directory is not a runnable Next.js app — we'll scaffold a new project in a subdirectory.");
   }
 
   // ── Step 1: Project name ──────────────────────────────────
@@ -152,13 +184,17 @@ export async function startCommand(options: StartOptions): Promise<void> {
 
   // ── Scaffold (new project) ────────────────────────────────
 
-  if (isNew) {
-    await scaffoldProject(dir, config);
+  const shouldScaffold = isNew || !isExistingRunnableNextApp;
+
+  if (shouldScaffold) {
+    await scaffoldProject(dir, config, { scaffoldInPlace: isNew });
   }
 
   // ── Write config ──────────────────────────────────────────
 
-  const configDir = isNew ? resolve(dir, config.projectName) : dir;
+  const configDir = shouldScaffold
+    ? (isNew ? dir : resolve(dir, config.projectName))
+    : dir;
   if (!existsSync(configDir)) {
     mkdirSync(configDir, { recursive: true });
   }
@@ -167,7 +203,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
 
   // ── Done ──────────────────────────────────────────────────
 
-  const nextCmd = isNew
+  const nextCmd = shouldScaffold && !isNew
     ? `cd ${config.projectName} && isac capture <url>`
     : "isac capture <url>";
 
@@ -178,13 +214,21 @@ export async function startCommand(options: StartOptions): Promise<void> {
 
 // ── Scaffolding ───────────────────────────────────────────────────
 
-async function scaffoldProject(dir: string, config: IsacConfig): Promise<void> {
+async function scaffoldProject(
+  dir: string,
+  config: IsacConfig,
+  options: { scaffoldInPlace: boolean },
+): Promise<void> {
   if (config.framework === "nextjs") {
-    await scaffoldNextJs(dir, config);
+    await scaffoldNextJs(dir, config, options);
   }
 }
 
-async function scaffoldNextJs(dir: string, config: IsacConfig): Promise<void> {
+async function scaffoldNextJs(
+  dir: string,
+  config: IsacConfig,
+  options: { scaffoldInPlace: boolean },
+): Promise<void> {
   const s = clack.spinner();
 
   // ── Create Next.js app ──────────────────────────────────────
@@ -207,8 +251,9 @@ async function scaffoldNextJs(dir: string, config: IsacConfig): Promise<void> {
   }
 
   try {
+    const createTarget = options.scaffoldInPlace ? "." : config.projectName;
     execSync(
-      `npx create-next-app@latest ${config.projectName} ${flags.join(" ")} --yes`,
+      `npx create-next-app@latest ${createTarget} ${flags.join(" ")} --yes`,
       { cwd: dir, stdio: "pipe" },
     );
     s.stop("Next.js project created");
@@ -219,7 +264,7 @@ async function scaffoldNextJs(dir: string, config: IsacConfig): Promise<void> {
     process.exit(1);
   }
 
-  const projectDir = resolve(dir, config.projectName);
+  const projectDir = options.scaffoldInPlace ? dir : resolve(dir, config.projectName);
 
   // ── Install extra dependencies ──────────────────────────────
 
