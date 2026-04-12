@@ -1,10 +1,12 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { isAgentBackend, type AgentBackend } from "./backends.js";
 
 const CONFIG_FILENAME = "isac.config.json";
 
 export interface IsacConfig {
   projectName: string;
+  backend: AgentBackend;
   framework: "nextjs";
   /** Used during scaffolding (isac start) to configure create-next-app flags */
   css: "tailwind" | "css-modules" | "vanilla";
@@ -19,7 +21,11 @@ export function readConfig(dir: string): IsacConfig | null {
   if (!existsSync(configPath)) return null;
   try {
     const raw = readFileSync(configPath, "utf-8");
-    return JSON.parse(raw) as IsacConfig;
+    const parsed = JSON.parse(raw) as Partial<IsacConfig> & { backend?: string };
+    const backend = isAgentBackend(parsed.backend ?? "claude")
+      ? (parsed.backend ?? "claude")
+      : "claude";
+    return { ...parsed, backend } as IsacConfig;
   } catch {
     return null;
   }

@@ -41,9 +41,21 @@ export {
 
 // ── Utils ───────────────────────────────────────────────────
 export { ensureClaude, getClaudeVersion } from "./utils/claude.js";
+export {
+  ensureBackendAvailable,
+  getBackendVersion,
+  getBackendUnavailableReason,
+  isBackendImplemented,
+} from "./utils/backend.js";
 
 // ── Config ─────────────────────────────────────────────────
 export { readConfig, writeConfig, type IsacConfig } from "./config.js";
+export {
+  AGENT_BACKENDS,
+  getAgentBackendLabel,
+  isAgentBackend,
+  type AgentBackend,
+} from "./backends.js";
 
 // ── Catalog ────────────────────────────────────────────────
 export {

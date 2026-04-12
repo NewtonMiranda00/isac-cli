@@ -20,7 +20,7 @@ program
   .description("Capture and extract design system from a URL")
   .argument("<url>", "URL of the page to capture")
   .option("-d, --dir <path>", "Target directory (defaults to cwd)")
-.option("--max-retries <n>", "Max verification retries", "3")
+  .option("--max-retries <n>", "Max verification retries", "3")
   .option(
     "--framework <name>",
     "Framework adapter to use (default: nextjs)",
@@ -45,9 +45,15 @@ program
     "Rendering engine: json-render (default) or legacy",
     "json-render",
   )
+  .option(
+    "--backend <name>",
+    "AI backend: claude (default) or codex",
+    "claude",
+  )
   .action(async (url: string, opts: Record<string, string | boolean>) => {
     const invokedAsReplicate = process.argv[2] === "replicate";
     await captureCommand(url, {
+      backend: opts.backend as string | undefined,
       dir: opts.dir as string | undefined,
       maxRetries: opts.maxRetries ? parseInt(opts.maxRetries as string, 10) : 3,
       framework: (opts.framework as string) ?? "nextjs",

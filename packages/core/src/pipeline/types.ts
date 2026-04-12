@@ -1,4 +1,5 @@
 import type { FrameworkAdapter } from "../adapter.js";
+import type { AgentBackend } from "../backends.js";
 
 export type PipelineMode = "design-system" | "replicate";
 
@@ -14,6 +15,7 @@ export type PipelineStopAfter =
 export interface PipelineContext {
   url: string;
   cwd: string;
+  backend: AgentBackend;
   screenshotDir: string;
   maxRetries: number;
   mode: PipelineMode;
@@ -63,6 +65,7 @@ export interface VerificationResult {
 export interface PipelineOptions {
   url: string;
   dir: string;
+  backend: AgentBackend;
   maxRetries: number;
   mode: PipelineMode;
   stopAfter: PipelineStopAfter;

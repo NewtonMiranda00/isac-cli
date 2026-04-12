@@ -85,6 +85,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   const ctx: PipelineContext = {
     url: options.url,
     cwd: options.dir,
+    backend: options.backend,
     screenshotDir: ".claude/screenshots",
     maxRetries: options.maxRetries,
     mode: options.mode,

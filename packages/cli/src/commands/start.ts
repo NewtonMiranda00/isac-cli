@@ -124,6 +124,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
 
   const config: IsacConfig = {
     projectName: projectName as string,
+    backend: "claude",
     framework: framework as IsacConfig["framework"],
     css: css as IsacConfig["css"],
     componentLibrary: componentLibrary as IsacConfig["componentLibrary"],
@@ -135,6 +136,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
   clack.note(
     [
       `${chalk.dim("Project")}       ${config.projectName}`,
+      `${chalk.dim("Backend")}       ${config.backend}`,
       `${chalk.dim("Framework")}     ${adapterDisplay}`,
       `${chalk.dim("CSS")}           ${config.css}`,
       `${chalk.dim("Components")}    ${config.componentLibrary}`,

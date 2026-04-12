@@ -1,11 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtempSync, rmSync, readFileSync } from "node:fs";
+import { mkdtempSync, rmSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { readConfig, writeConfig, type IsacConfig } from "../config.js";
 
 const SAMPLE_CONFIG: IsacConfig = {
   projectName: "my-project",
+  backend: "claude",
   framework: "nextjs",
   css: "tailwind",
   componentLibrary: "shadcn",
@@ -34,9 +35,27 @@ describe("config", () => {
       expect(config).toEqual(SAMPLE_CONFIG);
     });
 
+    it("defaults backend to claude when reading a legacy config", () => {
+      const configPath = join(tempDir, "isac.config.json");
+      writeFileSync(
+        configPath,
+        JSON.stringify({
+          projectName: "legacy-project",
+          framework: "nextjs",
+          css: "tailwind",
+          componentLibrary: "shadcn",
+          iconLibrary: "lucide",
+        }, null, 2),
+        "utf-8",
+      );
+
+      const config = readConfig(tempDir);
+      expect(config?.backend).toBe("claude");
+    });
+
     it("returns null for invalid JSON", () => {
       const configPath = join(tempDir, "isac.config.json");
-      require("node:fs").writeFileSync(configPath, "not json{{{", "utf-8");
+      writeFileSync(configPath, "not json{{{", "utf-8");
       expect(readConfig(tempDir)).toBeNull();
     });
   });
@@ -61,6 +80,13 @@ describe("config", () => {
     it("supports all framework values", () => {
       const config: IsacConfig = { ...SAMPLE_CONFIG, framework: "nextjs" };
       expect(config.framework).toBe("nextjs");
+    });
+
+    it("supports all backend values", () => {
+      for (const backend of ["claude", "codex"] as const) {
+        const config: IsacConfig = { ...SAMPLE_CONFIG, backend };
+        expect(config.backend).toBe(backend);
+      }
     });
 
     it("supports all css values", () => {

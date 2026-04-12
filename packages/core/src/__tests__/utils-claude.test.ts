@@ -5,10 +5,10 @@ describe("Claude utils", () => {
   it("ensureClaude returns a boolean", () => {
     const result = ensureClaude();
     expect(typeof result).toBe("boolean");
-  });
+  }, 15_000);
 
   it("getClaudeVersion returns a string", () => {
     const result = getClaudeVersion();
     expect(typeof result).toBe("string");
-  });
+  }, 15_000);
 });

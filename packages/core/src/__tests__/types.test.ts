@@ -41,6 +41,7 @@ describe("Types", () => {
     const ctx: PipelineContext = {
       url: "https://example.com",
       cwd: "/tmp/test",
+      backend: "claude",
       screenshotDir: ".claude/screenshots",
       maxRetries: 3,
       mode: "design-system",
@@ -60,6 +61,7 @@ describe("Types", () => {
     const ctx: PipelineContext = {
       url: "https://example.com",
       cwd: "/tmp/test",
+      backend: "claude",
       screenshotDir: ".claude/screenshots",
       maxRetries: 3,
       mode: "design-system",
@@ -78,6 +80,7 @@ describe("Types", () => {
       const ctx: PipelineContext = {
         url: "https://example.com",
         cwd: "/tmp/test",
+        backend: "claude",
         screenshotDir: ".claude/screenshots",
         maxRetries: 3,
         mode,
@@ -102,6 +105,7 @@ describe("Types", () => {
       const ctx: PipelineContext = {
         url: "https://example.com",
         cwd: "/tmp/test",
+        backend: "claude",
         screenshotDir: ".claude/screenshots",
         maxRetries: 3,
         mode: "design-system",

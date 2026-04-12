@@ -1,12 +1,16 @@
 import { resolve } from "node:path";
 import chalk from "chalk";
 import {
-  ensureClaude,
+  ensureBackendAvailable,
+  getAgentBackendLabel,
+  getBackendUnavailableReason,
+  isAgentBackend,
   printBanner,
   log,
   readConfig,
   runPipeline,
   disableMcp,
+  type AgentBackend,
   type PipelineStopAfter,
   type PipelineMode,
   type PipelineEngine,
@@ -16,6 +20,7 @@ import { resolveAdapter } from "../adapters.js";
 // ── Command ─────────────────────────────────────────────────────────
 
 export interface CaptureOptions {
+  backend?: string;
   dir?: string;
   maxRetries?: number;
   framework?: string;
@@ -44,20 +49,26 @@ export async function captureCommand(
     process.exit(1);
   }
 
-  // Ensure Claude CLI is available
-  if (!ensureClaude()) {
-    console.error(
-      chalk.red(
-        "  Error: Claude CLI not found. Install it from https://claude.ai/download",
-      ),
-    );
-    process.exit(1);
-  }
-
   const dir = resolve(options.dir ?? process.cwd());
 
   // Load project config (if exists)
   const config = readConfig(dir);
+  const rawBackend = options.backend ?? config?.backend ?? "claude";
+  if (!isAgentBackend(rawBackend)) {
+    console.error(
+      chalk.red("  Error: Invalid --backend value. Must be 'claude' or 'codex'."),
+    );
+    process.exit(1);
+  }
+  const backend: AgentBackend = rawBackend;
+
+  // Ensure selected backend is available
+  if (!ensureBackendAvailable(backend)) {
+    console.error(
+      chalk.red(`  Error: ${getBackendUnavailableReason(backend)}`),
+    );
+    process.exit(1);
+  }
 
   // Resolve adapter (CLI flag > config > default)
   const adapter = resolveAdapter(options.framework ?? config?.framework ?? "nextjs");
@@ -96,6 +107,7 @@ export async function captureCommand(
   // Print config
   log.summary("Target", url);
   log.summary("Directory", dir);
+  log.summary("Backend", getAgentBackendLabel(backend));
   log.summary("Framework", adapter.displayName);
   log.summary("Mode", mode === "replicate" ? "Page replication" : "Design system");
   log.summary("Engine", engine);
@@ -119,6 +131,7 @@ export async function captureCommand(
     const result = await runPipeline({
       url,
       dir,
+      backend,
       maxRetries,
       mode,
       stopAfter,
