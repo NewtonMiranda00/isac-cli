@@ -11,5 +11,7 @@ export default defineConfig({
   banner: {
     js: "#!/usr/bin/env node",
   },
-  noExternal: ["@guataiba/isac-core", "@guataiba/isac-nextjs"],
+  // Keep workspace packages external so parallel watch startup doesn't race
+  // against their own clean/build cycle.
+  external: ["@guataiba/isac-core", "@guataiba/isac-nextjs"],
 });
