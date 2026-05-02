@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+:root {
+  /* ─── Primitive palette ─── */
+  --sf-white: #ffffff;
+  --sf-black: #000000;
+  --sf-gray-50: #f9fafb;
+  --sf-gray-100: #e5e7eb;
+  --sf-gray-200: #ced0d5;
+  --sf-gray-300: #b3b8c3;
+  --sf-gray-400: #969fb2;
+  --sf-gray-500: #7785a4;
+  --sf-gray-600: #6b7280;
+  --sf-gray-700: #46567b;
+  --sf-gray-800: #324160;
+  --sf-gray-900: #1f2937;
+  --sf-gray-950: #111827;
+  --sf-accent: #2563eb;
+  --sf-link: #2563eb;
+
+  /* ─── Font families ─── */
+  --font-sans: "Times New Roman";
+  --font-display: "Times New Roman";
+  --font-mono: "SF Mono", "Fira Code", ui-monospace, monospace;
+
+  /* ─── Semantic tokens (light = default) ─── */
+  /* Backgrounds */
+  --color-bg-primary: var(--sf-gray-50);
+  --color-bg-secondary: var(--sf-gray-50);
+  --color-bg-tertiary: var(--sf-gray-50);
+  --color-bg-glass: rgba(255, 255, 255, 0.8);
+
+  /* Text */
+  --color-text-primary: var(--sf-gray-950);
+  --color-text-secondary: var(--sf-gray-600);
+  --color-text-tertiary: var(--sf-gray-900);
+  --color-text-inverse: var(--sf-white);
+
+  /* Borders */
+  --color-border-primary: var(--sf-gray-100);
+  --color-border-secondary: var(--sf-gray-200);
+  --color-border-subtle: var(--sf-gray-50);
+
+  /* Surfaces */
+  --color-surface-elevated: var(--sf-white);
+  --color-surface-sunken: var(--sf-gray-50);
+
+  /* Accent */
+  --color-accent: var(--sf-accent);
+  --color-text-link: var(--sf-link);
+
+  /* ─── Tailwind bridge ─── */
+  --background: var(--color-bg-primary);
+  --foreground: var(--color-text-primary);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Times New Roman";
+  --font-mono: "SF Mono", "Fira Code", ui-monospace, monospace;
+}
+
+/* ─── Dark theme (via data-theme attribute) ─── */
+[data-theme="dark"] {
+  /* Backgrounds */
+  --color-bg-primary: var(--sf-gray-950);
+  --color-bg-secondary: var(--sf-gray-900);
+  --color-bg-tertiary: var(--sf-gray-800);
+  --color-bg-glass: rgba(10, 10, 10, 0.8);
+
+  /* Text */
+  --color-text-primary: var(--sf-gray-100);
+  --color-text-secondary: var(--sf-gray-400);
+  --color-text-tertiary: var(--sf-gray-600);
+  --color-text-inverse: var(--sf-gray-950);
+
+  /* Borders */
+  --color-border-primary: var(--sf-gray-800);
+  --color-border-secondary: var(--sf-gray-700);
+  --color-border-subtle: var(--sf-gray-800);
+
+  /* Surfaces */
+  --color-surface-elevated: var(--sf-gray-900);
+  --color-surface-sunken: var(--sf-gray-950);
+
+  /* Accent */
+  --color-accent: var(--sf-accent);
+  --color-text-link: var(--sf-link);
+
+  /* Tailwind bridge */
+  --background: var(--color-bg-primary);
+  --foreground: var(--color-text-primary);
+}
+
+/* ─── Base styles ─── */
+body {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+}

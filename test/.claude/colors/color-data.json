@@ -1,0 +1,24 @@
+{
+  "backgrounds": {
+    "page": null,
+    "header": null,
+    "card": null,
+    "footer": null
+  },
+  "text": {
+    "heading": null,
+    "body": null,
+    "muted": null,
+    "link": null
+  },
+  "accents": {
+    "primary": null,
+    "primaryText": null
+  },
+  "borders": {
+    "default": null
+  },
+  "surfaces": {
+    "input": null
+  }
+}

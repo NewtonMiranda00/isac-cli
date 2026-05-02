@@ -1,0 +1,8 @@
+{
+  "projectName": "test",
+  "backend": "claude",
+  "framework": "nextjs",
+  "css": "tailwind",
+  "componentLibrary": "shadcn",
+  "iconLibrary": "lucide"
+}
